@@ -16,11 +16,11 @@ Cell[][] grid; // dekleration af spillepladen som et 2D array
 
 void setup() {
   size(900, 520);
-  columns = width/cellSize;
-  rows = (height - barHeight) / cellSize; // vi skal tage højde (ha ha) for menu-barren
+  columns = width/cellSize; // for at finde hvor mange celler der er plads til tager vi størrelsen af vinduet og dividerer det med størrelsen af en celle
+  rows = (height - barHeight) / cellSize; // dog skal vi tage højde (ha ha) for menu-barrens højde
   grid = new Cell[columns][rows]; // initering af spillepladen med antal kolloner og rækker
-  for (int i = 0; i < columns; i++) { // ved at bruge et nested forloop går vi gennem alle 'pladser' på pladen
-    for (int j = 0; j < rows; j++) {
+  for (int i = 0; i < columns; i++) { // et forloop til at gå gennem alle vandrette 'pladser'
+    for (int j = 0; j < rows; j++) { // et forloop til at gå gennem alle vandrette 'pladser'
       grid[i][j] = new Cell( i*cellSize, (j * cellSize) + barHeight); // vi opretter cellerne. Deres y-værdi tager højde for menu-barren
     }
   }
@@ -143,6 +143,53 @@ void mousePressed() {
             }
           }
           checkWin(); // hver gang man har afsløret en celle skal programmet tjekke om man har vundet
+        }
+      }
+    }
+  }
+}
+// genbruger det meste af koden i den tidligere funktion men for piletasterne og a/d, i stedet for museklik
+void keyPressed() {
+  if (key == 'a' ||key == 'A' || key =='d' ||key == 'D' || keyCode == RIGHT || keyCode == LEFT) {
+    if (!timerRunning) {
+      timerRunning = true;
+      startTime = millis();
+    }
+
+    if (gameLost || gameWon) return;
+    for (int i = 0; i < columns; i++) {
+      for (int j = 0; j < rows; j++) {
+        if (grid[i][j].mouseOver) {
+          if ((key == 'a' ||key == 'A' || keyCode == LEFT) && !grid[i][j].flag && !grid[i][j].revealed) {
+            revealCell(i, j);
+            if (grid[i][j].mine) {
+              gameLost = true;
+            } else {
+              checkWin();
+            }
+          } else if ((key =='d' ||key == 'D' || keyCode == RIGHT) && !grid[i][j].revealed) {
+            grid[i][j].flag = !grid[i][j].flag;
+            countAround();
+            if (grid[i][j].flag) {
+              numberOfFlags++;
+            }
+            if (!grid[i][j].flag) {
+              numberOfFlags--;
+            }
+          } else if ((key == 'a' ||key == 'A' || keyCode == LEFT) && grid[i][j].revealed && grid[i][j].flagsAround == grid[i][j].minesAround) {
+            for (int di = -1; di <= 1; di++) {
+              for (int dj = -1; dj <= 1; dj++) {
+                if (di == 0 && dj == 0) continue;
+                if (i + di >= 0 && i + di < columns && j + dj >= 0 && j + dj < rows && !grid[i+di][j+dj].flag) { //
+                  revealCell(i+di, j+dj);
+                  if (grid[i+di][j+dj].mine) {
+                    gameLost = true;
+                  }
+                }
+              }
+            }
+            checkWin();
+          }
         }
       }
     }
